@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard • Vehicle Safety</title>
+  <link rel="stylesheet" href="/static/css/dashboard.css?v=dropdown_fix_v2" />
+  <link rel="stylesheet" href="/static/css/glass-theme.css?v=force_white_v2" />
+  <script src="/static/js/theme-loader.js?v=fix_migration"></script>
+</head>
+
+<body class="smooth-transition">
+  <canvas id="bg-canvas"></canvas>
+
+  <div class="dashboard-layout scroll-section">
+    <aside class="sidebar">
+      <div class="logo">
+        <img src="/static/img/logo_bw.png" alt="VS" class="logo-icon"
+          style="padding: 0; background: none; border: none; border-radius: 0; filter: invert(1); mix-blend-mode: screen;">
+        <span>Vehicle Safety</span>
+      </div>
+
+      <nav class="nav-links">
+        <a href="#" class="nav-item active slide-in-stagger" style="animation-delay: 0.1s">Overview</a>
+        <a href="/drivers" class="nav-item slide-in-stagger" style="animation-delay: 0.2s">Drivers</a>
+        <a href="/logs" class="nav-item slide-in-stagger" style="animation-delay: 0.3s">Logs</a>
+        <a href="/settings" class="nav-item slide-in-stagger" style="animation-delay: 0.4s">Settings</a>
+      </nav>
+
+      <div class="user-profile">
+        <div class="avatar sidebar-avatar">DA</div>
+        <div>
+          <div style="font-weight:600" class="sidebar-username">Demo Admin</div>
+          <div style="font-size:12px;color:var(--text-muted)">View Profile</div>
+        </div>
+      </div>
+
+      <a href="#" id="sidebarLogoutBtn" class="nav-item danger">Logout</a>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-bar animate-enter" style="animation-delay: 0.1s">
+        <div class="page-title">
+          <h1>Dashboard Overview</h1>
+          <p>Real-time fleet monitoring and AI safety insights</p>
+        </div>
+
+        <div class="actions">
+          <button class="btn-glass" onclick="location.reload()">Refresh Data</button>
+          <div class="dropdown">
+            <button class="btn-glass" id="userMenuBtn">Account ▼</button>
+            <div class="dropdown-menu" id="userMenu">
+              <a href="#" class="menu-item">Profile</a>
+              <a href="#" class="menu-item">Billing</a>
+              <div style="height:1px;background:rgba(255,255,255,0.1);margin:6px 0"></div>
+              <a href="#" class="menu-item danger" id="logoutBtn">Logout</a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- KPI Grid -->
+      <section class="card-grid">
+        <div class="glass-card animate-enter" style="animation-delay: 0.2s">
+          <div class="stat-label">Active Drivers</div>
+          <div class="stat-value count-up" data-target="28">28</div>
+          <div class="stat-desc">Currently on the road</div>
+        </div>
+        <div class="glass-card animate-enter" style="animation-delay: 0.3s">
+          <div class="stat-label">Incidents (24h)</div>
+          <div class="stat-value count-up" data-target="14" style="color:#fbbf24">14</div>
+          <div class="stat-desc neg">Requires attention</div>
+        </div>
+
+        <!-- Upgraded AI Safety Score Card -->
+        <div class="glass-card animate-enter"
+          style="animation-delay: 0.4s; display:flex; gap:20px; align-items:center;">
+          <div class="ai-score-circle" style="border-top-color: var(--primary-light); transform: rotate(-15deg);">
+            <div style="transform: rotate(15deg);">87</div>
+          </div>
+          <div>
+            <div class="stat-label" style="margin-bottom:4px">AI Safety Score</div>
+            <div class="stat-value" style="font-size:24px; margin-bottom:0">Good</div>
+            <div class="trend-indicator trend-up">
+              ↑ 2.4% vs last week
+            </div>
+          </div>
+        </div>
+
+        <!-- New AI Prediction Widget -->
+        <div class="glass-card animate-enter" style="animation-delay: 0.5s">
+          <div class="stat-label">AI Forecast</div>
+          <div style="font-size:13px; color:var(--text-main); font-weight:500">Low Risk (Next 24h)</div>
+          <div class="stat-desc" style="margin-top:4px">Predicted incidents: <span
+              style="color:white; font-weight:600">0-1</span></div>
+        </div>
+      </section>
+
+      <!-- Main Layout -->
+      <section class="card-grid" style="grid-template-columns:2fr 1fr">
+
+        <!-- Driver Table -->
+        <div class="glass-card animate-enter" style="animation-delay: 0.6s">
+          <h3 style="margin-bottom:20px;font-weight:600">Fleet Status</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Driver</th>
+                  <th>Vehicle</th>
+                  <th>Status</th>
+                  <th>Seatbelt</th>
+                  <th>Alerts</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr onclick="window.location.href='/driver/1'" style="cursor:pointer">
+                  <td>
+                    <div class="driver-info">
+                      <div class="table-avatar">A</div>
+                      <div>Akash</div>
+                    </div>
+                  </td>
+                  <td>KA-01-A-1234</td>
+                  <td><span class="status-pill status-online">Online</span></td>
+                  <td><span style="color:#34d399">✔ On</span></td>
+                  <td>-</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="driver-info">
+                      <div class="table-avatar" style="background:var(--glass-border)">R</div>
+                      <div>Ravi</div>
+                    </div>
+                  </td>
+                  <td>KA-09-B-5678</td>
+                  <td><span class="status-pill status-idle">Idle</span></td>
+                  <td><span style="color:#94a3b8">Off</span></td>
+                  <td><span class="badge warning">Drowsy</span></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="driver-info">
+                      <div class="table-avatar" style="background:var(--glass-border)">S</div>
+                      <div>Sneha</div>
+                    </div>
+                  </td>
+                  <td>KL-07-C-2345</td>
+                  <td><span class="status-pill status-offline">Offline</span></td>
+                  <td>-</td>
+                  <td>-</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Live Alert Feed -->
+        <div class="glass-card animate-enter" style="animation-delay: 0.7s; display:flex; flex-direction:column">
+          <h3
+            style="margin-bottom:20px;font-weight:600; display:flex; justify-content:space-between; align-items:center;">
+            Live Alerts
+            <span
+              style="font-size:12px; background:rgba(239,68,68,0.2); color:#ef4444; padding:2px 8px; border-radius:10px">Live</span>
+          </h3>
+
+          <div id="alertFeed" style="flex:1; overflow-y:auto; max-height:400px; padding-right:4px;">
+            <!-- Alerts injected via JS -->
+          </div>
+
+          <button class="btn-glass" id="clearAlerts" style="margin-top:20px;width:100%">Acknowledge All</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/js/theme-engine.js"></script>
+  <script src="/static/js/ui.js?v=persistence_v2"></script>
+  <script>
+    (() => {
+      // --- Dropdown Logic ---
+      const dropdownBtn = document.getElementById("userMenuBtn");
+      const dropdown = document.querySelector(".dropdown");
+
+      dropdownBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle("active");
+      });
+
+      document.addEventListener("click", () => dropdown.classList.remove("active"));
+
+      // --- Logout Logic ---
+      const handleLogout = async (e) => {
+        e.preventDefault();
+        document.body.style.opacity = '0';
+        document.body.style.transform = "scale(0.96)";
+        document.body.style.transition = "all 0.5s ease";
+
+        localStorage.removeItem("vs_token");
+        try { await fetch("/logout"); } catch (e) { console.error(e); }
+
+        setTimeout(() => window.location.href = "/", 350);
+      };
+
+      const logoutBtn = document.getElementById('logoutBtn');
+      const sidebarLogoutBtn = document.getElementById('sidebarLogoutBtn');
+
+      if (logoutBtn) logoutBtn.onclick = handleLogout;
+      if (sidebarLogoutBtn) sidebarLogoutBtn.onclick = handleLogout;
+
+      // --- Enhanced Alert Feed Logic ---
+      const feed = document.getElementById("alertFeed");
+      const clearBtn = document.getElementById("clearAlerts");
+
+      const alertTypes = [
+        { t: "Unknown driver attempt", d: "Vehicle KA-01-A-1234", sev: "high", icon: "!" },
+        { t: "Drowsiness detected", d: "Driver: Ravi", sev: "medium", icon: "zZ" },
+        { t: "Seatbelt violation", d: "Driver: Akash", sev: "low", icon: "S" },
+        { t: "Geo-fence breach", d: "Vehicle MP-04-DA-1111", sev: "medium", icon: "G" }
+      ];
+
+      function pushAlert(a) {
+        const el = document.createElement("div");
+        el.className = `alert-feed-item alert-${a.sev}`;
+
+        // Initial state for animation
+        el.style.opacity = "0";
+        el.style.transform = "translateX(50px)";
+
+        el.innerHTML = `
+           <div class="alert-icon-box">${a.icon}</div>
+           <div style="flex:1">
+               <div style="font-weight: 600; font-size:14px; color: #fff;">${a.t}</div>
+               <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">${a.d}</div>
+               <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; opacity:0.7">Just now</div>
+           </div>
+        `;
+
+        feed.prepend(el);
+
+        // Trigger reflow for animation
+        void el.offsetHeight;
+
+        el.style.opacity = "1";
+        el.style.transform = "translateX(0)";
+
+        if (feed.children.length > 6) {
+          const last = feed.lastElementChild;
+          last.style.opacity = "0";
+          setTimeout(() => last.remove(), 300);
+        }
+      }
+
+      // Initial Alerts
+      pushAlert(alertTypes[2]);
+      setTimeout(() => pushAlert(alertTypes[1]), 800);
+      setTimeout(() => pushAlert(alertTypes[0]), 2000);
+
+      // Random alert generator
+      setInterval(() => {
+        const randAlert = alertTypes[Math.floor(Math.random() * alertTypes.length)];
+        // deep copy slightly to change time text? "Just now" is fine for mock
+        pushAlert(randAlert);
+      }, 8000);
+
+      if (clearBtn) clearBtn.onclick = () => {
+        feed.style.opacity = "0";
+        setTimeout(() => {
+          feed.innerHTML = "";
+          feed.style.opacity = "1";
+        }, 300);
+      };
+      // --- Inline Count-Up Animation (Fix) ---
+      setTimeout(() => {
+        const counters = document.querySelectorAll('.count-up');
+        counters.forEach(counter => {
+          const target = +counter.getAttribute('data-target');
+          if (!target) return;
+
+          let current = 0;
+          const duration = 1500;
+          const increment = target / (duration / 16);
+
+          const updateCounter = () => {
+            current += increment;
+            if (current < target) {
+              counter.innerText = Math.ceil(current);
+              requestAnimationFrame(updateCounter);
+            } else {
+              counter.innerText = target;
+            }
+          };
+          updateCounter();
+        });
+      }, 100);
+
+    })();
+  </script>
+
+  <script src="/static/js/theme-engine.js"></script>
+  <script src="/static/js/scroll-engine.js"></script>
+  <script>
+    // Init engines if not already
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof CinematicEngine !== 'undefined') {
+        const engine = new CinematicEngine();
+        engine.init();
+      }
+    });
+  </script>
+</body>
+
+</html>

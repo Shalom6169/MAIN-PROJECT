@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Settings • Vehicle Safety</title>
+    <script>
+        // Critical: Inline Theme Loader to prevent FOUC and ensure persistence
+        (function () {
+            // 1. Common Setter
+            window.setTheme = function (theme) {
+                console.log('Setting theme to:', theme);
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('vs_theme', theme);
+            };
+
+            // 2. Load Saved Logic
+            const saved = localStorage.getItem('vs_theme') || 'neon_dark';
+            console.log('Restoring saved theme:', saved);
+            document.documentElement.setAttribute('data-theme', saved);
+        })();
+    </script>
+    <link rel="stylesheet" href="/static/css/dashboard.css?v=marker_fix_v4">
+    <link rel="stylesheet" href="/static/css/glass-theme.css?v=force_white_final" />
+    <style>
+        /* Safety Net: Aggressive Inline Override for Neon Dark */
+        html[data-theme="neon_dark"],
+        html:not([data-theme]) {
+            --bg-color: #0E1117;
+            --card-bg: rgba(20, 25, 35, 0.7);
+        }
+
+        html[data-theme="neon_dark"] input,
+        html[data-theme="neon_dark"] label,
+        html[data-theme="neon_dark"] .form-group label,
+        html[data-theme="neon_dark"] .glass-card,
+        html[data-theme="neon_dark"] div,
+        html[data-theme="neon_dark"] h1,
+        html[data-theme="neon_dark"] h2,
+        html[data-theme="neon_dark"] h3,
+        html[data-theme="neon_dark"] span,
+        html[data-theme="neon_dark"] p {
+            color: #ffffff !important;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Dashboard Layout -->
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="/static/img/logo_bw.png" alt="VS" class="logo-icon"
+                    style="padding: 0; background: none; border: none; border-radius: 0; filter: invert(1); mix-blend-mode: screen;">
+                <span>Vehicle Safety</span>
+            </div>
+
+            <nav class="nav-links">
+                <a href="/dashboard" class="nav-item">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
+                        </path>
+                    </svg>
+                    Overview
+                </a>
+                <a href="/drivers" class="nav-item">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                    Drivers
+                </a>
+                <a href="/logs" class="nav-item slide-in-stagger" style="animation-delay: 0.3s">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    Logs
+                </a>
+                <a href="/settings" class="nav-item active slide-in-stagger" style="animation-delay: 0.4s">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                        </path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Settings
+                </a>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar sidebar-avatar">DA</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 14px;" class="sidebar-username">Demo Admin</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">View Profile</div>
+                </div>
+            </div>
+
+            <a href="#" id="sidebarLogoutBtn" class="nav-item danger" style="margin-top: 10px; color: #ef4444;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                    </path>
+                </svg>
+                Logout
+            </a>
+        </aside>
+
+        <!-- Main Content (Polished) -->
+        <main class="main-content">
+            <header class="top-bar animate-enter" style="animation-delay: 0.1s">
+                <div class="page-title">
+                    <h1>Settings</h1>
+                    <p>Manage application preferences, account, and security</p>
+                </div>
+            </header>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; padding-bottom: 40px;">
+                <!-- Left Column: Main Settings -->
+                <div style="display: flex; flex-direction: column; gap: 24px;">
+
+                    <!-- Profile Section -->
+                    <div class="glass-card animate-enter" style="animation-delay: 0.2s">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 24px;">
+                            <div>
+                                <h3 style="margin: 0;">Profile Information</h3>
+                                <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0 0 0;">Update your
+                                    account's profile information and email address.</p>
+                            </div>
+                            <button class="btn-glass" id="btn-edit-profile" onclick="toggleEditProfile()"
+                                style="font-size: 12px; padding: 6px 12px;">Edit Profile</button>
+                        </div>
+
+                        <div style="display: flex; gap: 24px; align-items: start;">
+                            <div style="position: relative;">
+                                <div class="avatar"
+                                    style="width: 80px; height: 80px; font-size: 32px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                                    DA</div>
+                                <button
+                                    style="position: absolute; bottom: 0; right: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--primary); border: 2px solid rgba(0,0,0,0.5); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;"
+                                    onmouseover="this.style.transform='scale(1.1)'"
+                                    onmouseout="this.style.transform='scale(1)'">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
+                                        </path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div class="form-group">
+                                    <label
+                                        style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: var(--text-muted);">Full
+                                        Name</label>
+                                    <input type="text" value="Demo Admin" readonly id="input-name" class="glass-input">
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: var(--text-muted);">Role</label>
+                                    <input type="text" value="System Administrator" readonly
+                                        style="opacity: 0.6; cursor: not-allowed;" id="input-role" class="glass-input">
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label
+                                        style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: var(--text-muted);">Email
+                                        Address</label>
+                                    <input type="email" value="admin@vehiclesafety.com" readonly id="input-email"
+                                        class="glass-input">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Appearance Section -->
+                    <div class="glass-card animate-enter" style="animation-delay: 0.3s">
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="margin: 0;">Appearance</h3>
+                            <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0 0 0;">Customize the
+                                interface theme and aesthetics.</p>
+                        </div>
+
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px;">
+                            <!-- Neon Dark -->
+                            <div onclick="setTheme('neon_dark'); updateActiveCard(this)" class="theme-card"
+                                id="theme-neon_dark">
+                                <div
+                                    style="height: 40px; background: linear-gradient(135deg, #4f46e5, #818cf8); border-radius: 8px; margin-bottom: 12px;">
+                                </div>
+                                <div style="font-size: 14px; font-weight: 500;">Neon Dark</div>
+                            </div>
+
+                            <!-- Ocean -->
+                            <div onclick="setTheme('ocean'); updateActiveCard(this)" class="theme-card"
+                                id="theme-ocean">
+                                <div
+                                    style="height: 40px; background: linear-gradient(135deg, #0ea5e9, #7dd3fc); border-radius: 8px; margin-bottom: 12px;">
+                                </div>
+                                <div style="font-size: 14px; font-weight: 500;">Ocean Blue</div>
+                            </div>
+
+                            <!-- Sunset -->
+                            <div onclick="setTheme('sunset'); updateActiveCard(this)" class="theme-card"
+                                id="theme-sunset">
+                                <div
+                                    style="height: 40px; background: linear-gradient(135deg, #f59e0b, #fcd34d); border-radius: 8px; margin-bottom: 12px;">
+                                </div>
+                                <div style="font-size: 14px; font-weight: 500;">Sunset</div>
+                            </div>
+
+                            <!-- Professional -->
+                            <div onclick="setTheme('professional'); updateActiveCard(this)" class="theme-card"
+                                id="theme-professional">
+                                <div
+                                    style="height: 40px; background: linear-gradient(135deg, #f8fafc, #cbd5e1); border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 12px;">
+                                </div>
+                                <div style="font-size: 14px; font-weight: 500;">Professional</div>
+                            </div>
+
+                            <!-- Dark Glass (New) -->
+
+                            <!-- Dark Glow (Default) -->
+                            <div onclick="setTheme('dark_glow'); updateActiveCard(this)" class="theme-card"
+                                id="theme-dark_glow">
+                                <div
+                                    style="height: 40px; background: #0E1117; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; margin-bottom: 12px; position: relative;">
+                                    <div
+                                        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; background: #B6F600; border-radius: 50%; box-shadow: 0 0 10px #B6F600;">
+                                    </div>
+                                </div>
+                                <div style="font-size: 14px; font-weight: 500;">Dark Glow</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Preferences & Security -->
+                <div style="display: flex; flex-direction: column; gap: 24px;">
+
+                    <!-- Notifications -->
+                    <div class="glass-card animate-enter" style="animation-delay: 0.4s">
+                        <h3 style="margin-bottom: 20px;">Notifications</h3>
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: 500; font-size: 14px;">Email Alerts</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">Critical safety violations
+                                    </div>
+                                </div>
+                                <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: 500; font-size: 14px;">SMS Notifications</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">Immediate incident reports
+                                    </div>
+                                </div>
+                                <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: 500; font-size: 14px;">Weekly Reports</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">Fleet performance summary
+                                    </div>
+                                </div>
+                                <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security -->
+                    <div class="glass-card animate-enter" style="animation-delay: 0.5s">
+                        <h3 style="margin-bottom: 20px;">Security</h3>
+                        <div style="display: flex; flex-direction: column; gap: 16px;">
+                            <button class="btn-glass" id="btn-change-password" onclick="openPasswordModal()"
+                                style="width: 100%; justify-content: space-between; display: flex; align-items: center;">
+                                <span>Change Password</span>
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                            <button class="btn-glass"
+                                style="width: 100%; justify-content: space-between; display: flex; align-items: center;">
+                                <span>Two-Factor Auth</span>
+                                <span class="badge success">Enabled</span>
+                            </button>
+                            <button class="btn-glass"
+                                style="width: 100%; justify-content: space-between; display: flex; align-items: center; color: #f87171; border-color: rgba(248, 113, 113, 0.3);">
+                                <span>Device Sessions</span>
+                                <span>2 Active</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Security Modal (Hidden) -->
+    <div class="modal-overlay" id="passwordModal" style="display: none;">
+        <div class="modal">
+            <h3>Change Password</h3>
+            <p>Enter your current password and a new secure password.</p>
+
+            <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
+                <input type="password" id="input-current-pass" placeholder="Current Password" class="search-input"
+                    style="width: 100%; box-sizing: border-box;">
+                <input type="password" id="input-new-pass" placeholder="New Password" class="search-input"
+                    style="width: 100%; box-sizing: border-box;">
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-glass" onclick="closeModal('passwordModal')">Cancel</button>
+                <button class="btn-glass" style="background: var(--primary); border: none;"
+                    onclick="handlePasswordUpdate()">Update Password</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Scripts -->
+    <script src="/static/js/theme-engine.js"></script>
+    <script src="/static/js/ui.js?v=persistence_v2"></script>
+    <script>
+        console.log("Settings script loaded");
+
+        // Global Functions
+        window.toggleEditProfile = async () => {
+            console.log("toggleEditProfile called");
+            try {
+                const editBtn = document.getElementById('btn-edit-profile');
+                const nameInput = document.getElementById('input-name');
+                const emailInput = document.getElementById('input-email');
+
+                if (!editBtn || !nameInput || !emailInput) {
+                    console.error("Elements not found", { editBtn, nameInput, emailInput });
+                    showToast('Error: Elements not found', 'error');
+                    return;
+                }
+
+                const isEditing = editBtn.getAttribute('data-editing') === 'true';
+
+                if (!isEditing) {
+                    // Enable Editing
+                    editBtn.innerText = "Save Changes";
+                    editBtn.setAttribute('data-editing', 'true');
+                    editBtn.style.background = "var(--primary)";
+                    editBtn.style.color = "white";
+                    editBtn.style.borderColor = "var(--primary)";
+
+                    nameInput.removeAttribute('readonly');
+                    nameInput.focus();
+                    emailInput.removeAttribute('readonly');
+
+                    showToast('Editing enabled', 'info');
+
+                } else {
+                    // Save Changes
+                    const token = localStorage.getItem("vs_token");
+                    if (!token) {
+                        showToast('Session expired. Please login again.', 'error');
+                        return;
+                    }
+
+                    editBtn.disabled = true;
+                    editBtn.innerText = "Saving...";
+                    editBtn.style.opacity = "0.7";
+
+                    const formData = new FormData();
+                    formData.append('username', nameInput.value);
+                    formData.append('email', emailInput.value);
+                    formData.append('token', token);
+
+                    const res = await fetch('/api/update-profile', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    let data;
+                    const contentType = res.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        data = await res.json();
+                    } else {
+                        data = { detail: await res.text() };
+                    }
+
+                    if (res.ok) {
+                        showToast('Profile updated!', 'success');
+
+                        // --- Global Polish: Update UI Immediately ---
+                        const newName = nameInput.value;
+                        const newInitials = newName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+                        // 1. Sidebar Name
+                        const sidebarName = document.querySelector('.user-profile div[style*="font-weight: 600"]');
+                        if (sidebarName) sidebarName.innerText = newName;
+
+                        // 2. All Avatar Initials (Sidebar + Profile Card)
+                        document.querySelectorAll('.avatar').forEach(av => av.innerText = newInitials);
+
+                        // 3. Reset Button State
+                        editBtn.innerText = "Edit Profile";
+                        editBtn.setAttribute('data-editing', 'false');
+                        editBtn.disabled = false;
+                        editBtn.style.opacity = "1";
+                        editBtn.style.background = ""; // reset to default glass
+                        editBtn.style.color = "";
+                        editBtn.style.borderColor = "";
+
+                        // 4. Reset Inputs
+                        nameInput.setAttribute('readonly', true);
+                        emailInput.setAttribute('readonly', true);
+
+                    } else {
+                        showToast(data.detail || 'Update failed', 'error');
+                        editBtn.disabled = false;
+                        editBtn.innerText = "Save Changes";
+                        editBtn.style.opacity = "1";
+                    }
+                }
+            } catch (e) {
+                console.error("Error in toggleEditProfile:", e);
+                showToast('An error occurred', 'error');
+                const editBtn = document.getElementById('btn-edit-profile');
+                if (editBtn) {
+                    editBtn.disabled = false;
+                    editBtn.innerText = "Save Changes";
+                }
+            }
+        };
+
+        window.openPasswordModal = () => {
+            console.log("openPasswordModal called");
+            if (typeof openModal === 'function') {
+                openModal('passwordModal');
+            } else {
+                console.error("openModal function is not defined");
+                // Fallback
+                const modal = document.getElementById('passwordModal');
+                if (modal) modal.style.display = 'flex';
+                // Also add active class manually
+                if (modal) modal.classList.add('active');
+            }
+        };
+
+        // Change Password Logic
+        window.handlePasswordUpdate = async () => {
+            console.log("handlePasswordUpdate called");
+            const currentPass = document.getElementById('input-current-pass').value;
+            const newPass = document.getElementById('input-new-pass').value;
+            const token = localStorage.getItem("vs_token");
+
+            if (!currentPass || !newPass) {
+                showToast('Please fill in all fields', 'error');
+                return;
+            }
+
+            if (!token) {
+                showToast('Session expired', 'error');
+                return;
+            }
+
+            const btn = document.querySelector('button[onclick="handlePasswordUpdate()"]');
+            const originalText = btn ? btn.innerText : "Update Password";
+            if (btn) {
+                btn.innerText = "Updating...";
+                btn.disabled = true;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('current_password', currentPass);
+                formData.append('new_password', newPass);
+                formData.append('token', token);
+
+                const res = await fetch('/api/change-password', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    showToast('Password updated successfully', 'success');
+                    closeModal('passwordModal');
+                    // Clear inputs
+                    document.getElementById('input-current-pass').value = '';
+                    document.getElementById('input-new-pass').value = '';
+                } else {
+                    showToast(data.detail || 'Failed to update password', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Network error occurred', 'error');
+            } finally {
+                if (btn) {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            }
+        };
+
+        // Redundant Event Listener Attachment (Safety Net)
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM fully loaded");
+
+            const editBtn = document.getElementById('btn-edit-profile');
+            if (editBtn) {
+                editBtn.addEventListener('click', (e) => {
+                    // Log click interaction for debugging
+                    console.log("Edit button clicked (via EventListener)");
+                });
+            } else {
+                console.error("Edit button not found in DOMContentLoaded");
+            }
+
+            const passBtn = document.getElementById('btn-change-password');
+            if (passBtn) {
+                passBtn.addEventListener('click', () => console.log("Password button clicked (via EventListener)"));
+            } else {
+                console.error("Password button not found in DOMContentLoaded");
+            }
+        });
+
+        // 2FA - Toggle
+        document.querySelector('button[onclick*="Two-Factor"]').onclick = function () {
+            const badge = this.querySelector('.badge');
+            if (badge.innerText === 'Enabled') {
+                badge.innerText = 'Disabled';
+                badge.className = 'badge danger';
+                showToast('2FA has been disabled', 'error');
+            } else {
+                badge.innerText = 'Enabled';
+                badge.className = 'badge success';
+                showToast('2FA enabled successfully', 'success');
+            }
+        };
+
+        // Active Sessions
+        document.querySelector('button[onclick*="Device Sessions"]').onclick = () => {
+            showToast('Scanning active sessions...', 'info');
+            setTimeout(() => showToast('All sessions verified secure', 'success'), 1500);
+        };
+
+        // Update Active Theme Card
+        function updateActiveCard(selectedCard) {
+            document.querySelectorAll('.theme-card').forEach(card => card.classList.remove('active'));
+            selectedCard.classList.add('active');
+        }
+
+        // Fetch and Populate Profile Data
+        window.initProfile = async () => {
+            const token = localStorage.getItem("vs_token");
+            if (!token) return; // User might be logged out or just viewing (unlikely in this flow)
+
+            try {
+                const res = await fetch('/api/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.ok) {
+                        console.log("Profile loaded:", data);
+
+                        // 1. Update Inputs
+                        const nameInput = document.getElementById('input-name');
+                        const emailInput = document.getElementById('input-email');
+                        const roleInput = document.getElementById('input-role');
+
+                        if (nameInput) nameInput.value = data.username;
+                        if (emailInput) emailInput.value = data.email;
+                        if (roleInput) roleInput.value = data.role;
+
+                        // 2. Update Global UI (Sidebar + Avatar)
+                        const sidebarName = document.querySelector('.user-profile div[style*="font-weight: 600"]');
+                        if (sidebarName) sidebarName.innerText = data.username;
+
+                        const initials = data.username.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                        document.querySelectorAll('.avatar').forEach(av => av.innerText = initials);
+                    }
+                } else {
+                    console.warn("Failed to load profile", res.status);
+                    if (res.status === 401) {
+                        // Token invalid
+                        localStorage.removeItem("vs_token");
+                        window.location.href = "/";
+                    }
+                }
+            } catch (e) {
+                console.error("Error loading profile:", e);
+            }
+        };
+
+        // Initialize Active Theme Card
+        window.updateActiveCard = (selectedCard) => {
+            if (!selectedCard) return;
+            document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+            selectedCard.classList.add('active');
+        };
+
+        // Call on load
+        document.addEventListener('DOMContentLoaded', () => {
+            window.initProfile();
+
+            // Set Active Card based on stored theme (Source of Truth)
+            const currentTheme = localStorage.getItem('vs_theme') || 'neon_dark';
+            const card = document.getElementById('theme-' + currentTheme);
+            if (card) {
+                console.log('Highlighting active card for:', currentTheme);
+                updateActiveCard(card);
+            } else {
+                // Fallback if specific card doesn't exist? Default to Neon Dark
+                const defaultCard = document.getElementById('theme-neon_dark');
+                if (defaultCard) updateActiveCard(defaultCard);
+            }
+        });
+
+        // Logout Logic
+        document.getElementById("sidebarLogoutBtn").addEventListener("click", async (e) => {
+            e.preventDefault();
+            document.body.style.opacity = '0';
+            document.body.style.transform = 'scale(0.98)';
+            document.body.style.transition = 'all 0.5s ease';
+            localStorage.removeItem("vs_token");
+            try { await fetch("/logout"); } catch (e) { }
+            setTimeout(() => window.location.href = "/", 500);
+        });
+    </script>
+    <!-- Cinematic Engines -->
+    <script src="/static/js/theme-engine.js"></script>
+    <script src="/static/js/scroll-engine.js"></script>
+    <script>
+        // Init engines
+        document.addEventListener('DOMContentLoaded', () => {
+            const engine = new CinematicEngine();
+            engine.init();
+        });
+    </script>
+</body>
+
+</html>

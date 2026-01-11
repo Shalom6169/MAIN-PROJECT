@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Register • Vehicle Safety</title>
+  <!-- Preload Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/static/css/login.css?v=3" />
+  <link rel="stylesheet" href="/static/css/glass-theme.css" />
+  <script src="/static/js/theme-loader.js"></script>
+</head>
+
+<body>
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Ambient Background -->
+  <div class="bg-glow"></div>
+  <div class="bg-glow-2"></div>
+
+  <!-- Register Card -->
+  <div class="login-card">
+    <div class="logo-text">FlowGuide / Vehicle Safety</div>
+
+    <h1 class="headline">Create Account</h1>
+    <p class="subheadline">Join to manage your fleet efficiently</p>
+
+    <form id="registerForm">
+      <div class="input-group">
+        <input type="text" name="username" class="input-field" placeholder="Username (letters only)" required
+          pattern="[A-Za-z]+" title="Only letters allowed" />
+      </div>
+
+      <div class="input-group">
+        <input type="email" name="email" class="input-field" placeholder="Email Address" required />
+      </div>
+
+      <div class="input-group">
+        <input type="password" name="password" class="input-field" placeholder="Password (min 6 chars)" required
+          minlength="6" />
+      </div>
+
+      <button type="submit" id="regBtn" class="btn-login" style="margin-top: 1rem;">Register</button>
+
+      <div id="msg" class="msg-box"></div>
+    </form>
+
+    <div class="divider">
+      <span>Or</span>
+    </div>
+
+    <div class="signup-link">
+      Already have an account? <a href="/login">Login</a>
+    </div>
+  </div>
+
+  <!-- Interactions Script (Optional, or inline for specific register logic) -->
+  <script src="/static/js/login-interactions.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('registerForm');
+      const msg = document.getElementById('msg');
+      const btn = document.getElementById('regBtn');
+
+      if (form) {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          msg.textContent = ''; msg.className = 'msg-box';
+
+          const originalText = btn.innerText;
+          btn.innerText = 'Creating Account...';
+          btn.style.opacity = '0.7';
+          btn.disabled = true;
+
+          try {
+            const resp = await fetch('/api/register', {
+              method: 'POST',
+              body: new FormData(form)
+            });
+
+            const text = await resp.text();
+            let data;
+            try { data = JSON.parse(text); } catch { data = { message: text }; }
+
+            if (!resp.ok) {
+              const error = data.detail || data.error || data.message || `Error ${resp.status}`;
+              msg.className = 'msg-box msg-error'; msg.textContent = error;
+              btn.innerText = originalText;
+              btn.disabled = false;
+              btn.style.opacity = '1';
+
+              // Shake Animation
+              const card = document.querySelector('.login-card');
+              card.classList.remove('shake-anim');
+              void card.offsetWidth;
+              card.classList.add('shake-anim');
+              return;
+            }
+
+            // success
+            const email = data.email || form.querySelector('input[name="email"]').value;
+            msg.className = 'msg-box msg-success'; msg.textContent = 'Account created! Redirecting...';
+
+            setTimeout(() => {
+              window.location.href = '/verify?email=' + encodeURIComponent(email);
+            }, 800);
+
+          } catch (err) {
+            console.error('Register error', err);
+            msg.className = 'msg-box msg-error';
+            msg.textContent = 'Network error — try again';
+            btn.innerText = originalText;
+            btn.disabled = false;
+            btn.style.opacity = '1';
+          }
+        });
+      }
+    });
+  </script>
+  <script src="/static/js/theme-engine.js"></script>
+  <script>
+    // Init theme engine
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof CinematicEngine !== 'undefined') {
+        const engine = new CinematicEngine();
+        engine.init();
+      }
+    });
+  </script>
+</body>
+
+</html>

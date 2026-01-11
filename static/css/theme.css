@@ -1,0 +1,49 @@
+:root {
+    /* Default (Light) - Optional base if needed, currently focusing on Dark based on request */
+    --bg-color: #ffffff;
+    --card-bg: #f3f4f6;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+    --accent-color: #2563eb;
+    --border-radius: 12px;
+    --blur-strength: 0px;
+}
+
+[data-theme="dark_glass"] {
+    --bg-color: #0E1117;
+    --card-bg: rgba(20, 25, 35, 0.9);
+    --border-radius: 22px;
+    --blur-strength: 14px;
+    --accent-color: #B6F600;
+    --secondary-accent: #FFB6D9;
+    --text-primary: #FFFFFF;
+    --text-secondary: #A1A1AA;
+
+    /* Glsasmorphism specific helpers */
+    --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+    /* Font settings */
+    --font-family: 'Neue Montreal', 'Inter', sans-serif;
+    --heading-weight: 700;
+    --body-weight: 400;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: var(--font-family, sans-serif);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    margin: 0;
+    padding: 0;
+}
+
+/* Base Utility Classes for Glassmorphism */
+.glass-panel {
+    background: var(--card-bg);
+    backdrop-filter: blur(var(--blur-strength));
+    -webkit-backdrop-filter: blur(var(--blur-strength));
+    border-radius: var(--border-radius);
+    border: var(--glass-border);
+    box-shadow: var(--glass-shadow);
+}

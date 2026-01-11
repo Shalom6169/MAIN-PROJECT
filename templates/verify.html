@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Verify Account • Vehicle Safety</title>
+    <link rel="stylesheet" href="/static/css/login.css?v=3" />
+    <link rel="stylesheet" href="/static/css/glass-theme.css" />
+    <script src="/static/js/theme-loader.js"></script>
+</head>
+
+<body>
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- 3D Glass Container -->
+    <div class="glass-container">
+        <div class="login-card" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare
+            data-tilt-max-glare="0.5">
+
+            <div class="logo-container">
+                <div class="logo-circle">?</div>
+            </div>
+
+            <div class="header">
+                <h2>Verify Email</h2>
+                <p>Enter the code sent to your email</p>
+            </div>
+
+            <form id="verifyForm" autocomplete="off">
+                <input type="hidden" name="email" id="emailInput" value="{{ email }}" />
+
+                <div class="input-group">
+                    <input class="input-field" name="code" type="text" placeholder="Enter 6-digit OTP" required
+                        pattern="[0-9]*" maxlength="6"
+                        style="letter-spacing: 4px; text-align: center; font-size: 1.2rem;" />
+                </div>
+
+                <button type="submit" class="btn-primary">Verify Account</button>
+            </form>
+
+            <div id="msg" class="msg-box"></div>
+
+            <div class="footer">
+                Did not receive code? <a href="#"
+                    onclick="alert('Please register again to resend.'); return false;">Resend</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+    <script src="/static/js/theme-engine.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof CinematicEngine !== 'undefined') {
+                const engine = new CinematicEngine();
+                engine.init();
+            }
+        });
+    </script>
+
+    <script>
+        const form = document.getElementById('verifyForm');
+        const msg = document.getElementById('msg');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            msg.textContent = '';
+            msg.className = 'msg-box';
+
+            const btn = form.querySelector('button');
+            const originalText = btn.textContent;
+            btn.textContent = 'Verifying...';
+            btn.style.opacity = '0.7';
+
+            try {
+                // Determine purpose based on context if needed, defaulting to verify-otp generic
+                const formData = new FormData(form);
+                formData.append('purpose', 'register');
+
+                const res = await fetch('/api/verify-otp', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const txt = await res.text();
+                let data;
+                try { data = JSON.parse(txt); } catch { data = { message: txt }; }
+
+                if (!res.ok) {
+                    msg.className = 'msg-box msg-error';
+                    msg.textContent = data.detail || 'Verification failed';
+                    btn.textContent = originalText;
+                    btn.style.opacity = '1';
+                    return;
+                }
+
+                // Success
+                msg.className = 'msg-box msg-success';
+                msg.textContent = 'Account verified! Redirecting...';
+
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1500);
+
+            } catch (err) {
+                console.error(err);
+                msg.className = 'msg-box msg-error';
+                msg.textContent = 'Network error';
+                btn.textContent = originalText;
+                btn.style.opacity = '1';
+            }
+        });
+    </script>
+</body>
+
+</html>

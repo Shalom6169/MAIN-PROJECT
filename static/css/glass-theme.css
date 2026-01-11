@@ -1,0 +1,668 @@
+:root {
+    /* --- Base Variables --- */
+    --font-heading: 'Inter', 'Roboto', sans-serif;
+    --font-body: 'Inter', 'Roboto', sans-serif;
+
+    /* Optimized for Pi (Low GPU overhead) */
+    --backdrop-blur: 15px;
+    --transition-speed: 0.6s;
+    /* Slower, more cinematic theme switch */
+    --ease-elastic: cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    --ease-cinema: cubic-bezier(0.22, 1, 0.36, 1);
+
+    /* Z-Index Layers */
+    --z-bg: -5;
+    --z-cursor: 9999;
+    --z-ui: 10;
+    --z-overlay: 100;
+}
+
+/* --- Theme Palettes (Synced with JS Engine) --- */
+
+/* CALM (Default) */
+:root[data-theme="calm"] {
+    --bg-color: #050a14;
+    --glow-color: rgba(100, 200, 255, 0.6);
+    --border-color: rgba(100, 200, 255, 0.15);
+    --text-primary: #e0f0ff;
+    --glass-bg: rgba(15, 23, 42, 0.4);
+    --btn-grad: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.1));
+}
+
+/* NEON DARK (Cyberpunk) */
+:root[data-theme="neon_dark"],
+:root[data-theme="normal"],
+:root[data-theme="default"] {
+    --bg-color: #0b0514;
+    --glow-color: rgba(180, 50, 255, 0.8);
+    --border-color: rgba(50, 255, 100, 0.3);
+    --text-primary: #ffffff;
+    --text-main: #ffffff;
+    --text-muted: #e2e8f0;
+    --glass-bg: rgba(20, 10, 30, 0.5);
+    --btn-grad: linear-gradient(135deg, rgba(180, 50, 255, 0.1), rgba(50, 255, 100, 0.1));
+}
+
+/* Aggressive Override Removed to allow dynamic text colors */
+
+/* OCEAN BLUE */
+:root[data-theme="ocean"] {
+    --bg-color: #021024;
+    --glow-color: rgba(0, 200, 255, 0.7);
+    --border-color: rgba(0, 150, 255, 0.25);
+    --text-primary: #e0f7ff;
+    --glass-bg: rgba(2, 16, 36, 0.4);
+    --btn-grad: linear-gradient(135deg, rgba(0, 200, 255, 0.1), rgba(255, 255, 255, 0.1));
+}
+
+/* SUNSET (Warm) */
+:root[data-theme="sunset"],
+:root[data-theme="warning"] {
+    --bg-color: #1a0505;
+    --glow-color: rgba(255, 100, 50, 0.7);
+    --border-color: rgba(255, 150, 50, 0.25);
+    --text-primary: #ffe0d0;
+    --glass-bg: rgba(40, 10, 10, 0.4);
+    --btn-grad: linear-gradient(135deg, rgba(255, 100, 50, 0.1), rgba(255, 200, 100, 0.1));
+}
+
+/* DARK GLOW (Radar) */
+:root[data-theme="dark_glow"] {
+    --bg-color: #000000;
+    --glow-color: rgba(0, 255, 150, 0.5);
+    --border-color: rgba(0, 255, 150, 0.2);
+    --text-primary: #ccffdd;
+    --glass-bg: rgba(0, 20, 10, 0.6);
+    --btn-grad: linear-gradient(135deg, rgba(0, 255, 150, 0.05), rgba(0, 100, 50, 0.1));
+}
+
+/* CRITICAL (Red Alert) */
+:root[data-theme="critical"] {
+    --bg-color: #1a0000;
+    --glow-color: rgba(255, 0, 0, 0.9);
+    --border-color: rgba(255, 0, 0, 0.5);
+    --text-primary: #ffdddd;
+    --glass-bg: rgba(40, 0, 0, 0.5);
+    --btn-grad: linear-gradient(135deg, rgba(255, 0, 0, 0.2), rgba(100, 0, 0, 0.2));
+}
+
+/* PROFESSIONAL (Subtle) */
+/* PROFESSIONAL (Clean White/Grey) */
+:root[data-theme="professional"] {
+    --bg-color: #f8fafc;
+    /* Slate 50 */
+    --glow-color: rgba(148, 163, 184, 0.5);
+    /* Slate 400 */
+    --border-color: rgba(15, 23, 42, 0.1);
+    /* Subtle dark border */
+    --text-primary: #0f172a;
+    /* Slate 900 */
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    /* Slate 500 */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    /* Frosted White */
+    --btn-grad: linear-gradient(135deg, #ffffff, #f1f5f9);
+}
+
+body {
+    background-color: var(--bg-color);
+    transition: background-color 0.8s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s ease;
+    /* ... rest of body styles ... */
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    margin: 0;
+    overflow-x: hidden;
+    transition: background-color var(--transition-speed) ease-in-out, color var(--transition-speed);
+}
+
+/* --- Global Background Canvas --- */
+#bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: var(--z-bg);
+    pointer-events: none;
+    transition: opacity 1s;
+}
+
+/* --- Interactive Cursor System --- */
+#cursor-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: var(--z-cursor);
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.cursor-orb {
+    position: absolute;
+    width: 300px;
+    /* Large soft glow */
+    height: 300px;
+    border-radius: 50%;
+    /* Gradient set by JS dynamically for max performance/sync */
+    background: radial-gradient(circle, var(--glow-color) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    mix-blend-mode: screen;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+    will-change: transform;
+}
+
+/* --- Glassmorphism UI Components --- */
+/* Glass Card - Base Style */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    /* Changed from --glass-border to --border-color */
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.02);
+    /* Changed from --glass-shadow */
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease, box-shadow 0.3s ease;
+    /* Theme Morph + Hover */
+}
+
+.glass-panel,
+.login-card,
+.sidebar,
+.card,
+.glass-card {
+    /* Added .glass-card here */
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur));
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.02);
+    transition: all 0.4s var(--ease-cinema);
+}
+
+.glass-panel:hover,
+.login-card:hover {
+    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.05);
+    border-color: var(--glow-color);
+    transform: translateY(-2px) scale(1.005);
+}
+
+.glass-btn,
+.btn-login,
+.btn-social {
+    background: var(--btn-grad);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 8px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Neon Sweep Effect */
+.glass-btn::after,
+.btn-login::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.5s;
+}
+
+.glass-btn:hover::after,
+.btn-login:hover::after {
+    left: 150%;
+    transition: left 0.7s;
+}
+
+.glass-btn:hover,
+.btn-login:hover {
+    box-shadow: 0 0 20px var(--glow-color);
+    border-color: var(--glow-color);
+    transform: translateY(-1px);
+}
+
+/* Toggle Password specific fix for glass */
+.input-field {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    transition: box-shadow 0.3s, border-color 0.3s;
+}
+
+.input-field:focus {
+    outline: none;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.glass-input {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 10px 16px;
+    border-radius: 8px;
+    width: 100%;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.glass-input:focus {
+    outline: none;
+    border-color: var(--glow-color);
+    background: rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 15px var(--glow-color);
+}
+
+.glass-input[readonly] {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: transparent;
+    cursor: default;
+    opacity: 0.8;
+}
+
+/* --- Micro-Animations --- */
+
+/* 1. Enter Animation (Fade + Scale + Slide) */
+.animate-enter {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    transition: opacity 0.6s var(--ease-cinema), transform 0.6s var(--ease-cinema);
+}
+
+.animate-enter.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+/* 2. Ripple Effect (Click Shockwave on Buttons) */
+.ripple-effect {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    transform: scale(0);
+    animation: ripple-anim 0.6s linear;
+    pointer-events: none;
+}
+
+@keyframes ripple-anim {
+    to {
+        transform: scale(15);
+        opacity: 0;
+    }
+}
+
+/* --- Cinematic Landing Page Utilities --- */
+
+/* 12-Column Grid System (Tailwind-like) */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 24px;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 10;
+    /* Above Fog */
+}
+
+/* Column Spans */
+.col-span-12 {
+    grid-column: span 12;
+}
+
+.col-span-8 {
+    grid-column: span 8;
+}
+
+.col-span-6 {
+    grid-column: span 6;
+}
+
+.col-span-4 {
+    grid-column: span 4;
+}
+
+/* Centered Hero Content */
+.hero-content {
+    grid-column: 2 / span 10;
+    /* Center with margins */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 80vh;
+}
+
+/* Flexbox Tweaks */
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.flex-col {
+    flex-direction: column;
+}
+
+.gap-4 {
+    gap: 16px;
+}
+
+.gap-8 {
+    gap: 32px;
+}
+
+/* Cinematic Typography Motion */
+.fade-up-stagger {
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeUp 1s var(--ease-cinema) forwards;
+}
+
+.fade-up-stagger:nth-child(1) {
+    animation-delay: 0.2s;
+}
+
+.fade-up-stagger:nth-child(2) {
+    animation-delay: 0.4s;
+}
+
+.fade-up-stagger:nth-child(3) {
+    animation-delay: 0.6s;
+}
+
+.fade-up-stagger:nth-child(4) {
+    animation-delay: 0.8s;
+}
+
+/* CTA Button */
+
+@keyframes fadeUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.blur-reveal {
+    filter: blur(10px);
+    opacity: 0;
+    animation: blurReveal 1.5s var(--ease-cinema) forwards 0.8s;
+}
+
+@keyframes blurReveal {
+    to {
+        filter: blur(0);
+        opacity: 0.8;
+    }
+}
+
+/* CTA "Breathing" Glow */
+.breath-glow {
+    animation: breath 4s ease-in-out infinite;
+}
+
+@keyframes breath {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px var(--glow-color);
+    }
+
+    50% {
+        box-shadow: 0 0 35px var(--glow-color), 0 0 10px rgba(255, 255, 255, 0.2);
+    }
+}
+
+/* --- Primary Glass Button (Get Started) --- */
+.btn-glass {
+    /* Fallback */
+    --primary: var(--glow-color, #0ea5e9);
+
+    background: var(--btn-grad, linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.5px;
+}
+
+.btn-glass:hover {
+    background: var(--primary);
+    border-color: var(--primary-light, #ffffff);
+    box-shadow: 0 0 30px var(--primary);
+    transform: translateY(-3px) scale(1.02);
+    color: #ffffff;
+}
+
+/* --- Neon Glow Login Button (Secondary) --- */
+.btn-glass-secondary {
+    /* Fallback if variables missing */
+    --primary: var(--glow-color, #0ea5e9);
+
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    backdrop-filter: blur(4px);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Use glow-color directly since primary-rgb is missing */
+    box-shadow: 0 0 10px var(--primary),
+        inset 0 0 5px rgba(255, 255, 255, 0.1);
+
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    margin-left: 1rem;
+}
+
+.btn-glass-secondary:hover {
+    border-color: var(--text-primary);
+    color: #ffffff;
+    background: var(--glow-color);
+    box-shadow: 0 0 25px var(--glow-color);
+    transform: translateY(-2px) scale(1.05);
+}
+
+/* Word Glow Emphasis */
+/* Word Glow Emphasis */
+.glow-text {
+    text-shadow: 0 0 20px var(--glow-color);
+    color: var(--primary-light);
+    /* Better visual pop than main text, but safe for light themes */
+    font-weight: 700;
+}
+
+/* Spacer Utility */
+.spacer-y-20 {
+    height: 80px;
+}
+
+
+
+/* 3. Critical Pulse */
+@keyframes criticalPulse {
+
+    50% {
+        box-shadow: 0 0 50px rgba(255, 0, 0, 0.5) inset;
+    }
+}
+
+[data-theme="critical"] .glass-panel {
+    animation: criticalPulse 1.5s infinite;
+}
+
+/* --- Global Cinematic Scroll Animations (Apple-Style) --- */
+.scroll-section {
+    opacity: 0;
+    transform: translateY(30px) scale(0.98);
+    filter: blur(4px);
+    transition:
+        opacity 1.0s cubic-bezier(0.19, 1, 0.22, 1),
+        transform 1.0s cubic-bezier(0.19, 1, 0.22, 1),
+        filter 1.0s ease;
+    will-change: opacity, transform, filter;
+}
+
+.scroll-section.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+}
+
+/* Stagger Logic */
+.stagger-trigger .stagger-item {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.stagger-trigger.visible .stagger-item {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.stagger-trigger.visible .stagger-item:nth-child(1) {
+    transition-delay: 0.05s;
+}
+
+.stagger-trigger.visible .stagger-item:nth-child(2) {
+    transition-delay: 0.1s;
+}
+
+.stagger-trigger.visible .stagger-item:nth-child(3) {
+    transition-delay: 0.15s;
+}
+
+.stagger-trigger.visible .stagger-item:nth-child(4) {
+    transition-delay: 0.2s;
+}
+
+.stagger-trigger.visible .stagger-item:nth-child(5) {
+    transition-delay: 0.25s;
+}
+
+/* Blur Reveal */
+.blur-reveal-scroll {
+    filter: blur(12px);
+    opacity: 0;
+    transition: filter 1.5s ease, opacity 1s ease;
+}
+
+.blur-reveal-scroll.visible {
+    filter: blur(0);
+    opacity: 1;
+}
+
+/* Canvas Global Positioning */
+#bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+    /* Let clicks pass through */
+}
+
+/* --- Liquid Blob Cursor --- */
+#cursor-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 9999;
+    /* Composite layer */
+}
+
+#cursor-orb {
+    position: absolute;
+    width: 0;
+    height: 0;
+    /* Frame anchor only */
+    transform: translate(-50%, -50%);
+    will-change: transform, left, top;
+}
+
+/* The Blob (Soft Light) */
+#cursor-orb::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 60px;
+    height: 60px;
+    /* Use theme-dynamic glow color */
+    background: var(--glow-color, rgba(255, 255, 255, 0.5));
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+
+    /* Heavy softness */
+    filter: blur(25px);
+    opacity: 0.6;
+
+    /* Screen blends light addictively, blending with theme */
+    mix-blend-mode: screen;
+
+    animation: blobBreath 4s infinite ease-in-out;
+    transition: background 0.5s ease;
+}
+
+/* Precision Dot Removed per user request */
+
+@keyframes blobBreath {
+
+    0%,
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.6;
+    }
+
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 0.4;
+    }
+}
+
+/* Hover State (Optional - requires JS trigger or pointer-events trickery, skipping for now to keep minimal) */

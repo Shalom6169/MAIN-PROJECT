@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Vehicle Safety System</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="stylesheet" href="/static/css/glass-theme.css" />
+</head>
+
+<body data-theme="calm">
+  <canvas id="bg-canvas"></canvas>
+  <div id="app" class="animate-enter">
+    {% block content %}{% endblock %}
+  </div>
+  <script src="/static/js/theme-engine.js"></script>
+  <script src="/static/js/main.js"></script>
+</body>
+
+</html>
